@@ -1,55 +1,64 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        const { seatId, userId } = body;
+        const {
+            holdId,
+            providerPaymentId,
+            amount,
+            status,
+        } = body;
 
-        if (!seatId || !userId) {
+        if (!holdId || !providerPaymentId || !amount || !status) {
             return NextResponse.json(
                 {
                     success: false,
-                    error: "seatId and userId are required",
+                    error:
+                        "holdId, providerPaymentId, amount and status are required",
                 },
                 { status: 400 }
             );
         }
 
-        if (!rateLimit(userId)) {
+        if (status === "FAILED") {
+            return NextResponse.json({
+                success: true,
+                message: "Payment failed",
+            });
+        }
+
+        if (status !== "PAID") {
             return NextResponse.json(
                 {
                     success: false,
-                    error: "Too many requests. Try again later.",
+                    error: "Invalid payment status",
                 },
-                { status: 429 }
+                { status: 400 }
             );
         }
 
-        const { data, error } = await supabase.rpc("hold_seat", {
-            p_seat_id: seatId,
-            p_user_id: userId,
+        const { data, error } = await supabase.rpc("confirm_payment", {
+            p_hold_id: holdId,
+            p_provider_payment_id: providerPaymentId,
+            p_amount: amount,
         });
 
         if (error) {
-            const isConflict = error.message.includes(
-                "Seat is currently held"
-            );
-
             return NextResponse.json(
                 {
                     success: false,
                     error: error.message,
                 },
-                { status: isConflict ? 409 : 400 }
+                { status: 400 }
             );
         }
 
         return NextResponse.json({
             success: true,
-            hold: data?.[0] ?? null,
+            payment: data?.[0] ?? null,
         });
     } catch {
         return NextResponse.json(

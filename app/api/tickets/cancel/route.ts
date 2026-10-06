@@ -1,55 +1,39 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        const { seatId, userId } = body;
+        const { ticketId } = body;
 
-        if (!seatId || !userId) {
+        if (!ticketId) {
             return NextResponse.json(
                 {
                     success: false,
-                    error: "seatId and userId are required",
+                    error: "ticketId is required",
                 },
                 { status: 400 }
             );
         }
 
-        if (!rateLimit(userId)) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: "Too many requests. Try again later.",
-                },
-                { status: 429 }
-            );
-        }
-
-        const { data, error } = await supabase.rpc("hold_seat", {
-            p_seat_id: seatId,
-            p_user_id: userId,
+        const { data, error } = await supabase.rpc("cancel_ticket", {
+            p_ticket_id: ticketId,
         });
 
         if (error) {
-            const isConflict = error.message.includes(
-                "Seat is currently held"
-            );
-
             return NextResponse.json(
                 {
                     success: false,
                     error: error.message,
                 },
-                { status: isConflict ? 409 : 400 }
+                { status: 400 }
             );
         }
 
         return NextResponse.json({
             success: true,
-            hold: data?.[0] ?? null,
+            cancellation: data?.[0] ?? null,
         });
     } catch {
         return NextResponse.json(
