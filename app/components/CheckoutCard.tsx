@@ -150,24 +150,36 @@ export function CheckoutCard({
               Return to Seat Selection
             </button>
           ) : (
-            <button
-              disabled={isProcessing}
-              onClick={handlePay}
-              className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white shadow-xl transition-all duration-200 ${
-                isProcessing
-                  ? "bg-zinc-800 cursor-not-allowed text-zinc-400"
-                  : "bg-gradient-to-r from-emerald-600 via-indigo-600 to-cyan-600 hover:brightness-110 active:scale-98 shadow-emerald-900/30"
-              }`}
-            >
-              {isProcessing ? (
-                <div className="flex items-center justify-center gap-2">
-                  <span className="h-4 w-4 border-2 border-zinc-400 border-t-white rounded-full animate-spin" />
-                  <span>{loadingStage}</span>
-                </div>
-              ) : (
-                "Pay ₹10.00"
-              )}
-            </button>
+            <div className="space-y-3">
+              <button
+                disabled={isProcessing}
+                onClick={handlePay}
+                className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white shadow-xl transition-all duration-200 ${
+                  isProcessing
+                    ? "bg-zinc-800 cursor-not-allowed text-zinc-400"
+                    : "bg-gradient-to-r from-emerald-600 via-indigo-600 to-cyan-600 hover:brightness-110 active:scale-98 shadow-emerald-900/30 cursor-pointer"
+                }`}
+              >
+                {isProcessing ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="h-4 w-4 border-2 border-zinc-400 border-t-white rounded-full animate-spin" />
+                    <span>{loadingStage}</span>
+                  </div>
+                ) : (
+                  "Pay ₹10.00"
+                )}
+              </button>
+
+              <button
+                type="button"
+                disabled={isProcessing}
+                onClick={onReturnToSeats}
+                className="w-full py-2.5 px-4 rounded-xl border border-zinc-800 bg-zinc-950 hover:bg-zinc-900 text-zinc-400 hover:text-white font-medium text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>←</span>
+                <span>Cancel Reservation & Pick Another Seat</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
