@@ -6,6 +6,13 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const eventId = searchParams.get("eventId") || "1";
 
+        // Automatically clean up any holds that have passed their 5-minute expiration
+        try {
+            await supabase.rpc("expire_holds");
+        } catch (e) {
+            console.error("Auto expire_holds cleanup error:", e);
+        }
+
         const { data, error } = await supabase
             .from("seats")
             .select("id, seat_number, status, event_id")
