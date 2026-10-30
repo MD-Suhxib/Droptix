@@ -9,6 +9,7 @@ import { SeatMap } from "./components/SeatMap";
 import { CheckoutCard } from "./components/CheckoutCard";
 import { TicketCard } from "./components/TicketCard";
 import { DemoControls } from "./components/DemoControls";
+import { ProgressStepper } from "./components/ProgressStepper";
 
 import {
   Step,
@@ -30,6 +31,7 @@ export default function Home() {
   const [step, setStep] = useState<Step>("landing");
   const [isJoiningQueue, setIsJoiningQueue] = useState(false);
   const [queueError, setQueueError] = useState<string | null>(null);
+  const [stepWarning, setStepWarning] = useState<string | null>(null);
 
   // Booking State
   const [booking, setBooking] = useState<BookingState>({
@@ -137,8 +139,18 @@ export default function Home() {
 
   // Step 4 Success -> Step 5
   const handlePaymentSuccess = (paymentResp: PaymentCreateResponse) => {
-    const tId = paymentResp.webhook?.payment?.ticket_id || 101;
-    const pId = paymentResp.providerPaymentId || "PAY_DEMO_100";
+    const paymentObj = (paymentResp.webhook?.payment as Record<string, unknown>) || {};
+    const tId =
+      (paymentObj.ticket_id as number) ??
+      (paymentObj.ticketId as number) ??
+      (paymentObj.id as number) ??
+      ((paymentResp.webhook as Record<string, unknown>)?.ticket_id as number) ??
+      1;
+
+    const pId =
+      paymentResp.providerPaymentId ||
+      (paymentObj.provider_payment_id as string) ||
+      "PAY_DEMO_100";
 
     setBooking((prev) => {
       const next = {
@@ -150,6 +162,51 @@ export default function Home() {
       return next;
     });
     setStep("confirmation");
+  };
+
+  const handleProgressNavigation = (targetStep: Step) => {
+    setStepWarning(null);
+
+    if (targetStep === "landing") {
+      setStep("landing");
+      return;
+    }
+
+    if (targetStep === "queue") {
+      if (!booking.queuePosition && step === "landing") {
+        setStepWarning("Please click 'Join Waiting Room' below first to get your position in line.");
+        return;
+      }
+      setStep("queue");
+      return;
+    }
+
+    if (targetStep === "seats") {
+      if (!booking.queuePosition && !booking.selectedSeatId && !booking.holdId) {
+        setStepWarning("Please join the waiting room first to be admitted to seat selection.");
+        return;
+      }
+      setStep("seats");
+      return;
+    }
+
+    if (targetStep === "checkout") {
+      if (!booking.holdId) {
+        setStepWarning("Please select and hold an available seat first before going to checkout.");
+        return;
+      }
+      setStep("checkout");
+      return;
+    }
+
+    if (targetStep === "confirmation") {
+      if (!booking.ticketId) {
+        setStepWarning("Please complete checkout and payment first to view your confirmed ticket.");
+        return;
+      }
+      setStep("confirmation");
+      return;
+    }
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -184,65 +241,14 @@ export default function Home() {
 
       {/* Main Content Area */}
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-8 sm:px-6">
-        {/* Stepper Navigation */}
-        <div className="mb-8 overflow-x-auto pb-2">
-          <div className="flex items-center justify-between min-w-[500px] max-w-2xl mx-auto px-4 py-2.5 rounded-full bg-zinc-900/80 border border-zinc-800/80 text-xs">
-            <button
-              onClick={() => setStep("landing")}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all ${
-                step === "landing"
-                  ? "bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/20"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              <span>1. Event</span>
-            </button>
-            <span className="text-zinc-700">→</span>
-            <button
-              onClick={() => setStep("queue")}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all ${
-                step === "queue"
-                  ? "bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/20"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              <span>2. Queue</span>
-            </button>
-            <span className="text-zinc-700">→</span>
-            <button
-              onClick={() => setStep("seats")}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all ${
-                step === "seats"
-                  ? "bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/20"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              <span>3. Seats</span>
-            </button>
-            <span className="text-zinc-700">→</span>
-            <button
-              onClick={() => setStep("checkout")}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all ${
-                step === "checkout"
-                  ? "bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/20"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              <span>4. Checkout</span>
-            </button>
-            <span className="text-zinc-700">→</span>
-            <button
-              onClick={() => setStep("confirmation")}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all ${
-                step === "confirmation"
-                  ? "bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/20"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              <span>5. Ticket</span>
-            </button>
-          </div>
-        </div>
+        {/* Stepper Navigation & Progress Bar */}
+        <ProgressStepper
+          currentStep={step}
+          booking={booking}
+          onNavigate={handleProgressNavigation}
+          warning={stepWarning}
+          onClearWarning={() => setStepWarning(null)}
+        />
 
         {/* Dynamic View Switcher */}
         {step === "landing" && (
@@ -417,7 +423,10 @@ export default function Home() {
               seatNumber={booking.selectedSeatNumber || "A-1"}
               userId={userId}
               providerPaymentId={booking.providerPaymentId}
-              onBookAnother={() => setStep("landing")}
+              onTicketCancelled={() => {
+                clearBookingState();
+              }}
+              onBookAnother={handleResetDemo}
             />
           ) : (
             <div className="w-full max-w-xl mx-auto my-12 text-center p-8 rounded-2xl border border-zinc-800 bg-zinc-900/90 shadow-2xl space-y-4">
@@ -427,10 +436,10 @@ export default function Home() {
                 Complete seat reservation and payment first to view your event ticket stub.
               </p>
               <button
-                onClick={() => setStep(booking.holdId ? "checkout" : "seats")}
+                onClick={() => handleProgressNavigation("seats")}
                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:brightness-110 text-white font-bold text-xs shadow-lg transition-all"
               >
-                {booking.holdId ? "Go to Checkout →" : "Choose a Seat →"}
+                Choose a Seat →
               </button>
             </div>
           )

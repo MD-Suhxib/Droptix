@@ -27,12 +27,6 @@ export function CheckoutCard({
   const [loadingStage, setLoadingStage] = useState<string>("Processing payment...");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Demo Controls State
-  const [showDemoControls, setShowDemoControls] = useState(false);
-  const [delayMs, setDelayMs] = useState<number>(1500);
-  const [shouldFail, setShouldFail] = useState<boolean>(false);
-  const [duplicateCallback, setDuplicateCallback] = useState<boolean>(false);
-
   const handlePay = async () => {
     if (isExpired || isProcessing) return;
 
@@ -43,7 +37,7 @@ export function CheckoutCard({
     // Stage delay effect for visual realism
     const stageTimeout = setTimeout(() => {
       setLoadingStage("Confirming ticket in database transaction...");
-    }, Math.max(700, delayMs / 2));
+    }, 700);
 
     try {
       const res = await fetch("/api/payments/create", {
@@ -54,9 +48,6 @@ export function CheckoutCard({
         body: JSON.stringify({
           holdId: holdId,
           amount: 1000,
-          delayMs: delayMs,
-          shouldFail: shouldFail,
-          duplicateCallback: duplicateCallback,
         }),
       });
 
@@ -177,58 +168,6 @@ export function CheckoutCard({
                 "Pay ₹10.00"
               )}
             </button>
-          )}
-        </div>
-
-        {/* Developer Demo Controls */}
-        <div className="pt-2 border-t border-zinc-800">
-          <button
-            onClick={() => setShowDemoControls(!showDemoControls)}
-            className="flex items-center justify-between w-full text-left text-xs font-semibold text-zinc-500 hover:text-zinc-300 transition-colors py-1"
-          >
-            <span className="flex items-center gap-1.5">
-              <span>⚙️</span> Developer Demo Controls
-            </span>
-            <span>{showDemoControls ? "▲ Hide" : "▼ Expand"}</span>
-          </button>
-
-          {showDemoControls && (
-            <div className="mt-3 p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-4 text-xs">
-              <div>
-                <label className="text-zinc-400 block mb-1">
-                  Payment Delay ({delayMs} ms)
-                </label>
-                <input
-                  type="range"
-                  min="300"
-                  max="4000"
-                  step="100"
-                  value={delayMs}
-                  onChange={(e) => setDelayMs(Number(e.target.value))}
-                  className="w-full accent-indigo-500 cursor-pointer"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-zinc-300">Simulate Payment Failure</span>
-                <input
-                  type="checkbox"
-                  checked={shouldFail}
-                  onChange={(e) => setShouldFail(e.target.checked)}
-                  className="h-4 w-4 accent-rose-500 cursor-pointer rounded"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-zinc-300">Simulate Duplicate Webhook Callback</span>
-                <input
-                  type="checkbox"
-                  checked={duplicateCallback}
-                  onChange={(e) => setDuplicateCallback(e.target.checked)}
-                  className="h-4 w-4 accent-indigo-500 cursor-pointer rounded"
-                />
-              </div>
-            </div>
           )}
         </div>
       </div>

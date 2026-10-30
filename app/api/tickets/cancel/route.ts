@@ -17,8 +17,19 @@ export async function POST(request: Request) {
             );
         }
 
+        const numericTicketId = Number(ticketId);
+        if (!numericTicketId || isNaN(numericTicketId)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Valid numeric ticketId is required",
+                },
+                { status: 400 }
+            );
+        }
+
         const { data, error } = await supabase.rpc("cancel_ticket", {
-            p_ticket_id: ticketId,
+            p_ticket_id: numericTicketId,
         });
 
         if (error) {
@@ -31,9 +42,11 @@ export async function POST(request: Request) {
             );
         }
 
+        const cancellationData = Array.isArray(data) ? data[0] : (data ?? null);
+
         return NextResponse.json({
             success: true,
-            cancellation: data?.[0] ?? null,
+            cancellation: cancellationData,
         });
     } catch {
         return NextResponse.json(

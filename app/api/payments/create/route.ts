@@ -57,6 +57,19 @@ export async function POST(request: Request) {
 
         const webhookResult = await webhookResponse.json();
 
+        if (!webhookResponse.ok || !webhookResult.success) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    paymentStatus: "FAILED",
+                    error: webhookResult?.error || "Payment confirmation failed in database",
+                    providerPaymentId: payment.providerPaymentId,
+                    webhook: webhookResult,
+                },
+                { status: 400 }
+            );
+        }
+
         // Simulate the provider sending the exact same callback twice.
         let duplicateResult = null;
 
