@@ -8,6 +8,7 @@ interface SeatMapProps {
   userId: string;
   onHoldSuccess: (holdId: number, seatId: number, seatNumber: string, expiresAt: string) => void;
   onBackToQueue?: () => void;
+  refreshTrigger?: number;
 }
 
 const INITIAL_SEATS: SeatItem[] = [
@@ -23,7 +24,7 @@ const INITIAL_SEATS: SeatItem[] = [
   { id: 10, seatNumber: "A-10", status: "AVAILABLE", price: 10 },
 ];
 
-export function SeatMap({ userId, onHoldSuccess, onBackToQueue }: SeatMapProps) {
+export function SeatMap({ userId, onHoldSuccess, onBackToQueue, refreshTrigger }: SeatMapProps) {
   const [seats, setSeats] = useState<SeatItem[]>(INITIAL_SEATS);
   const [counts, setCounts] = useState({ total: 10, available: 10, held: 0, sold: 0 });
   const [isFetchingSeats, setIsFetchingSeats] = useState<boolean>(false);
@@ -57,7 +58,7 @@ export function SeatMap({ userId, onHoldSuccess, onBackToQueue }: SeatMapProps) 
       fetchSeats();
     }, 4000);
     return () => clearInterval(interval);
-  }, [fetchSeats]);
+  }, [fetchSeats, refreshTrigger]);
 
   const handleSeatClick = async (seatId: number) => {
     setSelectedSeatId(seatId);

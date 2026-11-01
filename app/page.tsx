@@ -10,6 +10,7 @@ import { CheckoutCard } from "./components/CheckoutCard";
 import { TicketCard } from "./components/TicketCard";
 import { DemoControls } from "./components/DemoControls";
 import { ProgressStepper } from "./components/ProgressStepper";
+import { AdminModal } from "./components/AdminModal";
 
 import {
   Step,
@@ -32,6 +33,8 @@ export default function Home() {
   const [isJoiningQueue, setIsJoiningQueue] = useState(false);
   const [queueError, setQueueError] = useState<string | null>(null);
   const [stepWarning, setStepWarning] = useState<string | null>(null);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [seatsVersion, setSeatsVersion] = useState(0);
 
   // Booking State
   const [booking, setBooking] = useState<BookingState>({
@@ -72,6 +75,17 @@ export default function Home() {
     });
     setStep("landing");
     setQueueError(null);
+  };
+
+  const handleSeatsReset = () => {
+    setSeatsVersion((v) => v + 1);
+    clearBookingState();
+    setBooking({
+      userId: userId,
+      eventId: 1,
+    });
+    setQueueError(null);
+    setStepWarning(null);
   };
 
   // Step 1 -> Step 2: Join Waiting Room
@@ -235,6 +249,7 @@ export default function Home() {
         onUpdateUserId={handleUpdateUserId}
         onNavigateTab={scrollToSection}
         onResetDemo={handleResetDemo}
+        onOpenAdmin={() => setIsAdminOpen(true)}
         currentStep={step}
         onGoHome={() => setStep("landing")}
       />
@@ -385,6 +400,7 @@ export default function Home() {
             userId={userId}
             onHoldSuccess={handleHoldSuccess}
             onBackToQueue={() => setStep("queue")}
+            refreshTrigger={seatsVersion}
           />
         )}
 
@@ -464,6 +480,14 @@ export default function Home() {
       <DemoControls
         currentUserId={userId}
         onSwitchUser={handleUpdateUserId}
+        onOpenAdmin={() => setIsAdminOpen(true)}
+      />
+
+      {/* Admin Panel Modal */}
+      <AdminModal
+        isOpen={isAdminOpen}
+        onClose={() => setIsAdminOpen(false)}
+        onSeatsReset={handleSeatsReset}
       />
     </div>
   );

@@ -7,6 +7,7 @@ interface HeaderProps {
   onUpdateUserId?: (newId: string) => void;
   onNavigateTab?: (sectionId: string) => void;
   onResetDemo?: () => void;
+  onOpenAdmin?: () => void;
   currentStep?: string;
   onGoHome?: () => void;
 }
@@ -16,6 +17,7 @@ export function Header({
   onUpdateUserId,
   onNavigateTab,
   onResetDemo,
+  onOpenAdmin,
   onGoHome,
 }: HeaderProps) {
   const [isEditingUser, setIsEditingUser] = useState(false);
@@ -128,6 +130,18 @@ export function Header({
             <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-ping" />
             Demo Mode
           </span>
+
+          {/* Admin Button */}
+          {onOpenAdmin && (
+            <button
+              onClick={onOpenAdmin}
+              title="Open Admin Controls"
+              className="flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-950/50 px-3 py-1 text-xs font-semibold text-purple-300 hover:bg-purple-900/60 hover:text-purple-100 hover:border-purple-400 transition-all shadow-sm"
+            >
+              <span>🛡️</span>
+              <span>Admin</span>
+            </button>
+          )}
 
           {onResetDemo && (
             <button

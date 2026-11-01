@@ -6,12 +6,14 @@ interface DemoControlsProps {
   currentUserId: string;
   onSwitchUser: (newUserId: string) => void;
   onHoldExpiredTriggered?: () => void;
+  onOpenAdmin?: () => void;
 }
 
 export function DemoControls({
   currentUserId,
   onSwitchUser,
   onHoldExpiredTriggered,
+  onOpenAdmin,
 }: DemoControlsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpiring, setIsExpiring] = useState(false);
@@ -111,6 +113,22 @@ export function DemoControls({
                 </p>
               )}
             </div>
+
+            {/* Admin Panel Trigger */}
+            {onOpenAdmin && (
+              <div className="pt-2 border-t border-zinc-800">
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    onOpenAdmin();
+                  }}
+                  className="w-full py-2 px-3 rounded-lg border border-purple-500/40 bg-purple-950/40 text-purple-300 hover:bg-purple-900/50 hover:text-purple-200 font-semibold transition-all text-xs flex items-center justify-center gap-1.5"
+                >
+                  <span>🛡️</span>
+                  <span>Open Admin Panel (Reset Seats)</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ) : (
